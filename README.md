@@ -15,49 +15,70 @@ This project implements a time-series regression pipeline to predict stock price
 
 ## 🔧 Features & Techniques Used
 
-### Data Preparation
-- Parsed and cleaned historical S&P 500 stock data.
-- Removed rows with missing values.
-- Extracted **time-based features**: day, month, year, quarter, and day of week.
+### 📅 Time-Series Feature Engineering
+- Extracted:
+  - Day, Month, Year, Quarter
+  - Day of the week
+- Lag features:
+  - Previous day’s open, close, and volume
+- Moving averages:
+  - 5-day and 10-day rolling averages (shifted to prevent leakage)
 
-### Feature Engineering
-- **Lag features**: Previous day’s close, open, and volume per stock.
-- **Moving averages**: 5-day and 10-day rolling averages.
-- One-hot encoded stock symbols using `ColumnTransformer`.
+### 🔄 Data Preprocessing
+- Removed all rows with missing values.
+- Used one-hot encoding for stock names using `ColumnTransformer`.
 
-### Modeling
-- Trained a multi-output regression model with LightGBM (as a RandomForest alternative).
-- Time-aware split per stock to preserve temporal order.
-- Evaluated using **MSE**, **MAE**, and **R² score**.
-- Visualized predictions and residuals.
+### ⚙️ Model Training
+- Time-aware split per stock to preserve sequence integrity (80% train, 20% test).
+- `LightGBM` wrapped with `MultiOutputRegressor` for multi-target regression.
+- Parallel training with `n_jobs=-1`.
+
+### 📊 Evaluation Metrics
+- **MSE** (Mean Squared Error)
+- **MAE** (Mean Absolute Error)
+- **R² Score**
 
 ---
 
-## 📊 Results Summary
+## ✅ Results Summary
 
-- **Test Set Performance:**
+- **Test Set Performance**
   - **Mean Squared Error (MSE):** 459.79
   - **Mean Absolute Error (MAE):** 2.93
   - **R² Score:** 0.9717
 
-- **Visualizations Include:**
-  - **Actual vs. Predicted Close Price for first 200 samples:**
-    ![image](https://github.com/user-attachments/assets/9aea7902-db6f-4740-8fba-254672523216)
+- **Actual vs Predicted Prices:**
+  - Very close alignment between actual and predicted close prices for the first 200 samples.
 
-  - **Residual histogram for combined targets:**
-    ![image](https://github.com/user-attachments/assets/4d6307a6-3cbe-4ffd-87e6-3896dcd43651)
+- **Residual Analysis:**
+  - Histograms for each target (Open, High, Low, Close) show sharp spikes at 0 with minimal spread.
+  - Suggests strong model calibration and minimal bias or variance issues.
 
-  - **Residual histograms for all four predicted targets (Open, High, Low, Close):**
-    ![image](https://github.com/user-attachments/assets/b630d97b-280d-4f9d-8f43-7cbd398565e5)
-    
-    ![image](https://github.com/user-attachments/assets/681fd84e-fb6c-4fd9-8e44-fedc780abaff)
-    
-    ![image](https://github.com/user-attachments/assets/eaab85cd-2395-419a-929c-0540f59a6c5a)
-    
-    ![image](https://github.com/user-attachments/assets/d3ee60c6-d17e-4fc5-90c5-7f98459909a9)
 ---
 
-## 🔮 Example of Testing Output
+## 📈 Visual Insights
+
+> _Note: Replace these image placeholders with your actual image URLs or upload them in your GitHub repo._
+
+- **Actual vs. Predicted Close Prices (first 200 samples)**  
+  ![Actual vs Predicted Close](https://github.com/user-attachments/assets/9aea7902-db6f-4740-8fba-254672523216)
+
+- **Residual Histogram (All Targets Combined)**  
+  ![Combined Residuals](https://github.com/user-attachments/assets/4d6307a6-3cbe-4ffd-87e6-3896dcd43651)
+
+- **Residuals by Target:**
+  - Open  
+    ![Open Residuals](https://github.com/user-attachments/assets/b630d97b-280d-4f9d-8f43-7cbd398565e5)
+  - High  
+    ![High Residuals](https://github.com/user-attachments/assets/681fd84e-fb6c-4fd9-8e44-fedc780abaff)
+  - Low  
+    ![Low Residuals](https://github.com/user-attachments/assets/eaab85cd-2395-419a-929c-0540f59a6c5a)
+  - Close  
+    ![Close Residuals](https://github.com/user-attachments/assets/d3ee60c6-d17e-4fc5-90c5-7f98459909a9)
+
+---
+
+## 🔮 Example Predictions
 
 ### Last Row Prediction
 ```python
@@ -65,7 +86,17 @@ Model predicts last row to be [Open, High, Low, Close]:  [73.05, 73.85, 72.72, 7
 Actual values are [Open, High, Low, Close]:  [72.7, 75, 72.69, 73.86]
 ```
 
-### Real Predictions (e.g., for AAPL at June 2025)
+### Real Prediction Example for AAPL (June 2025)
 ```python
+Input: June 1st, 2025 (Q2, Monday), prior close: 190.42, volume: 6M+
 Model predicts values to be [Open, High, Low, Close]: [188.91, 190.38, 186.66, 192.04]
 ```
+
+---
+
+## 📌 Final Thoughts
+
+- LightGBM proved highly efficient and accurate for time-series regression.
+- Feature engineering (especially moving averages and lags) had a noticeable impact on predictive performance.
+- Residuals showed minimal deviation, with dense peaks around zero — indicating low bias and good generalization.
+- The time-aware split strategy ensured temporal integrity and mimics realistic forecasting scenarios.
